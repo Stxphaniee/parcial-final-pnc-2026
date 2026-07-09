@@ -36,6 +36,7 @@ public class MovementService {
     }
 
     private Movement createMovement(MovementRequestDto dto, MovementType type) {
+
         Lector lector = lectorRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new RuntimeException("Lector not found"));
 
@@ -43,15 +44,41 @@ public class MovementService {
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
         if (type == MovementType.BORROWING) {
+
             if (!book.isAvailable()) {
                 throw new RuntimeException("Book is not available");
             }
+
             book.setAvailableCount(book.getAvailableCount() - 1);
+
             if (book.getAvailableCount() == 0) {
                 book.setAvailable(false);
             }
-        } else {
+
+        }
+
+        /*
+        else {
             book.setAvailableCount(book.getAvailableCount() + 1);
+        }
+        */
+
+        else {
+
+            movementRepository.findFirstByLectorAndBookAndType(
+                    lector,
+                    book,
+                    MovementType.BORROWING
+            ).orElseThrow(() ->
+                    new RuntimeException("The user has not borrowed this book")
+            );
+
+            book.setAvailableCount(book.getAvailableCount() + 1);
+
+
+            if (book.getAvailableCount() > 0) {
+                book.setAvailable(true);
+            }
         }
 
         bookRepository.save(book);
