@@ -1,4 +1,4 @@
-# [Nombre] [Carné]
+# Stephanie Aracely Echeverria Cuellar 
 
 ## Indicaciones
 
@@ -26,6 +26,12 @@ Actualmente:
 
 **Instrucción:** Explique la causa del problema y resuélvalo.
 
+
+
+R: El error pasa porque cuando se filtra por autor y genero al mismo tiempo el servicio llama al metodo del repositorio
+ enviando los parametros en un orden incorrecto.ademas el metodo del repositorio recibe el genero como String
+cuando en la entidad Book el atributo genre es un enum (Genre) y esto provoca que Spring Data no pueda construir correctamente la consulta y el servidor falle
+
 ---
 
 ### 2. Error al volver a prestar un libro (10%)
@@ -34,6 +40,10 @@ Un usuario reportó que al pedir prestado el libro **The Selfish Gene**, devolve
 
 **Instrucción:** Explique la causa del problema y resuélvalo.
 
+R: Cuando un libro es devuelto umicamente se incrementa la cantidad disponible (availableCount) pero nunca se actualiza el estado available
+Esto provoca que un libro que anteriormente quedó marcado como no disponible (available = false) continue en ese estado aunque ya exista una copia disponible nuevamente
+como el prestamo valida el atributo available el sistema impide volver a prestar el libro y genera un error
+
 ---
 
 ### 3. Cantidad de libros por género (10%)
@@ -41,6 +51,9 @@ Un usuario reportó que al pedir prestado el libro **The Selfish Gene**, devolve
 Existe un endpoint que devuelve la cantidad de libros disponibles por género. Sin embargo, actualmente dicho endpoint falla.
 
 **Instrucción:** Explique la causa del problema y resuélvalo.
+
+R: El endpoint obtiene todos los libros mediante findAll() sin verificar si realmente están disponibles
+Como el requerimiento es devolver la cantidad de libros disponibles por generoel resultado es incorrecto y el endpoint puede fallar dependiendo de la implementacion
 
 ---
 
@@ -53,6 +66,11 @@ GET /books?id=ed16ed1e-7017-4697-a08a-d28c09a74acf
 ```
 
 **Instrucción:** Explique la causa del problema.
+
+R: El frontend realiza la petición utilizando un parametro de consulta
+GET /books?id=ed16ed1e-7017-4697-a08a-d28c09a74acf
+y el controlador espera recibir el identificador como una variable de ruta (@PathVariable) : GET /books/{id}
+al no coincidir el tipo de ruta esperado con la petición enviada spring no encuentra el endpoint correspondiente y la solicitud falla
 
 ---
 
@@ -72,6 +90,8 @@ QA ha reportado que el siguiente payload enviado al endpoint `POST /books` provo
 ```
 
 **Instrucción:** Explique la causa del problema.
+R:
+el método valueOf() diferencia entre mayusculas y minúsculas y si el enum contiene CLASSIC, al recibir "classic" se produce una IllegalArgumentException
 
 ---
 
@@ -81,8 +101,13 @@ QA ha reportado que un usuario es capaz de devolver libros que nunca ha solicita
 
 **Instrucción:**
 
-- Confirme si este comportamiento es realmente posible.
-- Si es posible, explique la causa y resuelva el problema.
+- Confirme si este comportamiento es realmente posible. SI
+- Si es posible, explique la causa y resuelva el problema. 
+r: el metodo encargado de devolver un libro nunca verifica que el usuario tenga un prestamo activo de ese libro unicamente obtiene el usuario y el libro y
+incrementa la cantidad disponible y registra la devolucion
+como no existe una validación previacu alquier usuario puede devolver cualquier libro aunque nunca lo haya solicitado en prestámo
+esto genera inconsistencias en el inventario ya que la cantidad disponible puede incrementarse sin que realmente exista una devoluciOn
+
 - Si no es posible, explique por qué, haciendo referencia al código correspondiente.
 
 ---
